@@ -1,0 +1,8 @@
+# build output
+build/
+*.o
+*.d
+
+# editor / tooling
+.cache/
+compile_commands.json
