@@ -2,11 +2,6 @@
 
 #define WG_COLOR_BG 0x000000u
 
-static const uint32_t tile_colors[WG_TILE_COUNT] = {
-    [WG_TILE_AIR] = 0x262626u,
-    [WG_TILE_STONE] = 0x7a7a7au,
-};
-
 void wg_render_world(const wg_world *world, wg_framebuffer *fb) {
   wg_fb_clear(fb, WG_COLOR_BG);
 
@@ -28,7 +23,7 @@ void wg_render_world(const wg_world *world, wg_framebuffer *fb) {
     int py = oy + y * tile_px + border;
     for (int x = 0; x < world->w; x++) {
       int px = ox + x * tile_px + border;
-      uint32_t c = tile_colors[wg_world_get(world, x, y)];
+      uint32_t c = wg_tile_color[wg_world_get(world, x, y)];
       wg_fb_fill_rect(fb, px, py, inner, inner, c);
     }
   }

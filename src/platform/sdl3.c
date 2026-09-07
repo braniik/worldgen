@@ -72,6 +72,7 @@ bool wg_platform_wait_event(wg_platform *p, wg_event *ev) {
 
   ev->type = WG_EVENT_NONE;
   ev->key = 0;
+  ev->repeat = false;
 
   switch (e.type) {
   case SDL_EVENT_QUIT:
@@ -80,10 +81,11 @@ bool wg_platform_wait_event(wg_platform *p, wg_event *ev) {
     break;
 
   case SDL_EVENT_KEY_DOWN:
-    if (e.key.repeat)
-      break; // holding G shouldn't spam regenerate
     ev->type = WG_EVENT_KEY_DOWN;
     ev->key = map_key(e.key.key);
+    ev->repeat = e.key.repeat;
+    if (ev->key >= 'a' && ev->key <= 'z' && (e.key.mod & SDL_KMOD_SHIFT))
+      ev->key -= 'a' - 'A';
     break;
 
   case SDL_EVENT_WINDOW_RESIZED:

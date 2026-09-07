@@ -29,6 +29,7 @@ enum {
 typedef struct {
   wg_event_type type;
   int key;
+  bool repeat;
 } wg_event;
 
 wg_platform *wg_platform_create(const char *title, int w, int h);

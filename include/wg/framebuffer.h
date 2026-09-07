@@ -22,6 +22,11 @@ void wg_fb_clear(wg_framebuffer *fb, uint32_t color);
 void wg_fb_fill_rect(wg_framebuffer *fb, int x, int y, int w, int h,
                      uint32_t color);
 
+#define WG_FONT_H 8
+#define WG_FONT_W 8
+int wg_fb_text(wg_framebuffer *fb, int x, int y, int scale, const char *s,
+               uint32_t color);
+
 #ifdef __cplusplus
 }
 #endif

@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#include "wg/params.h"
+#include "wg/tiles.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,16 +13,13 @@ extern "C" {
 #define WG_WORLD_WIDTH 256
 #define WG_WORLD_HEIGHT 256
 
-// So far simple tile ids are enough.
-typedef enum { WG_TILE_AIR = 0, WG_TILE_STONE, WG_TILE_COUNT } wg_tile;
-
 typedef struct {
   uint32_t seed;
   int w, h;
   uint8_t tiles[WG_WORLD_WIDTH * WG_WORLD_HEIGHT];
 } wg_world;
 
-void wg_world_generate(wg_world *world, uint32_t seed);
+void wg_world_generate(wg_world *world, uint32_t seed, const wg_params *p);
 
 static inline uint8_t wg_world_get(const wg_world *world, int x, int y) {
   return world->tiles[y * world->w + x];

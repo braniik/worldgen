@@ -1,4 +1,5 @@
 #include "wg/framebuffer.h"
+#include "font8x8_basic.h"
 
 #include <stdlib.h>
 
@@ -48,4 +49,21 @@ void wg_fb_fill_rect(wg_framebuffer *fb, int x, int y, int w, int h,
     for (int xx = x0; xx < x1; xx++)
       row[xx] = color;
   }
+}
+
+int wg_fb_text(wg_framebuffer *fb, int x, int y, int scale, const char *s,
+               uint32_t color) {
+  int cx = x;
+  for (; *s; s++, cx += WG_FONT_W * scale) {
+    unsigned char c = (unsigned char)*s;
+    if (c >= 128)
+      c = '?';
+    const unsigned char *glyph = font8x8_basic[c];
+    for (int row = 0; row < WG_FONT_H; row++)
+      for (int bit = 0; bit < WG_FONT_W; bit++)
+        if (glyph[row] >> bit & 1)
+          wg_fb_fill_rect(fb, cx + bit * scale, y + row * scale, scale, scale,
+                          color);
+  }
+  return cx - x;
 }

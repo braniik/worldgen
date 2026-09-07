@@ -4,12 +4,15 @@
 #include <time.h>
 
 #include "wg/framebuffer.h"
+#include "wg/menu.h"
 #include "wg/platform.h"
 #include "wg/render.h"
 #include "wg/rng.h"
 #include "wg/world.h"
 
 static wg_world world;
+static wg_params params;
+static wg_menu menu;
 
 static uint32_t initial_seed(int argc, char **argv) {
   /* worldgen 0xDEADBEEF or worldgen 12345 reproduces a run exactly. */
@@ -19,7 +22,7 @@ static uint32_t initial_seed(int argc, char **argv) {
 }
 
 static void regenerate(wg_platform *p, uint32_t seed) {
-  wg_world_generate(&world, seed);
+  wg_world_generate(&world, seed, &params);
 
   char title[64];
   snprintf(title, sizeof title, "worldgen | seed 0x%08x", seed);
@@ -29,6 +32,7 @@ static void regenerate(wg_platform *p, uint32_t seed) {
 
 int main(int argc, char **argv) {
   uint32_t seed = initial_seed(argc, argv);
+  params = wg_params_default();
 
   wg_platform *p = wg_platform_create("worldgen", 800, 800);
   if (!p)
@@ -45,6 +49,7 @@ int main(int argc, char **argv) {
 
   regenerate(p, seed);
   wg_render_world(&world, &fb);
+  wg_menu_render(&menu, &params, &fb);
   wg_platform_present(p, &fb);
 
   bool running = true;
@@ -58,6 +63,14 @@ int main(int argc, char **argv) {
       break;
 
     case WG_EVENT_KEY_DOWN:
+      if (menu.open && ev.key != 'm' && ev.key != WG_KEY_ESCAPE) {
+        if (wg_menu_key(&menu, &params, ev.key))
+          regenerate(p, seed);
+        dirty = true;
+        break;
+      }
+      if (ev.repeat)
+        break;
       switch (ev.key) {
       case WG_KEY_ESCAPE:
         running = false;
@@ -65,6 +78,10 @@ int main(int argc, char **argv) {
       case 'g':
         seed = wg_seed_next(seed);
         regenerate(p, seed);
+        dirty = true;
+        break;
+      case 'm':
+        menu.open = !menu.open;
         dirty = true;
         break;
       case WG_KEY_F11:
@@ -91,6 +108,7 @@ int main(int argc, char **argv) {
 
     if (dirty && running) {
       wg_render_world(&world, &fb);
+      wg_menu_render(&menu, &params, &fb);
       wg_platform_present(p, &fb);
       dirty = false;
     }
