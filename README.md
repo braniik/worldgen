@@ -5,7 +5,7 @@ Not sure what I'll do with it later, so far, this is just me playing around and 
 
 ## deadbeef seed
 
-<img width="819" height="831" alt="deadbeefseed" src="https://github.com/user-attachments/assets/80a377bd-07c2-4f35-99d0-601fa510af56" />
+<img width="1295" height="1290" alt="Screenshot_20260907_191751" src="https://github.com/user-attachments/assets/7071aead-450b-4e97-8eac-7bd3f1cfc285" />
 
 
 ## Trying it out
