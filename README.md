@@ -10,6 +10,7 @@ Every world grows from a single 32-bit seed. The same seed gives the same world.
 
 ## Deadbeef Seed
 
+<img width="769" height="771" alt="deadbeefseed1" src="https://github.com/user-attachments/assets/2898d8cd-0e29-49a5-a0e2-c17ad0ba07be" />
 
 ## Features
 
