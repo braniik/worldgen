@@ -16,6 +16,8 @@ extern "C" {
 typedef struct {
   uint32_t seed;
   int w, h;
+  float level[WG_TILE_COUNT - 1];
+  float height[WG_WORLD_WIDTH * WG_WORLD_HEIGHT];
   uint8_t tiles[WG_WORLD_WIDTH * WG_WORLD_HEIGHT];
 } wg_world;
 
@@ -23,6 +25,10 @@ void wg_world_generate(wg_world *world, uint32_t seed, const wg_params *p);
 
 static inline uint8_t wg_world_get(const wg_world *world, int x, int y) {
   return world->tiles[y * world->w + x];
+}
+
+static inline float wg_world_height(const wg_world *world, int x, int y) {
+  return world->height[y * world->w + x];
 }
 
 static inline void wg_world_set(wg_world *world, int x, int y, uint8_t tile) {

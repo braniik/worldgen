@@ -2,7 +2,7 @@
 
 #define WG_COLOR_BG 0x000000u
 
-void wg_render_world(const wg_world *world, wg_framebuffer *fb) {
+void wg_render_world(const wg_world *world, wg_framebuffer *fb, bool grid) {
   wg_fb_clear(fb, WG_COLOR_BG);
 
   int tile_px = fb->w / world->w;
@@ -11,9 +11,9 @@ void wg_render_world(const wg_world *world, wg_framebuffer *fb) {
   if (tile_px < 1)
     tile_px = 1;
 
-  // Below 3px per tile there's no room for a border without the fill vanishing,
-  // so drop it.
-  int border = tile_px >= 3 ? 1 : 0;
+  // A 1px border on small tiles eats most of the image (56% of pixels at 3px),
+  // so only draw it once tiles are big enough to afford it.
+  int border = grid && tile_px >= WG_GRID_MIN_TILE_PX ? 1 : 0;
   int inner = tile_px - border;
 
   int ox = (fb->w - tile_px * world->w) / 2;

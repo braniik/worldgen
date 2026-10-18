@@ -13,6 +13,7 @@
 static wg_world world;
 static wg_params params;
 static wg_menu menu;
+static bool grid = true;
 
 static uint32_t initial_seed(int argc, char **argv) {
   /* worldgen 0xDEADBEEF or worldgen 12345 reproduces a run exactly. */
@@ -30,7 +31,15 @@ static void regenerate(wg_platform *p, uint32_t seed) {
   printf("seed 0x%08x\n", seed);
 }
 
+static void redraw(wg_platform *p, wg_framebuffer *fb) {
+  wg_render_world(&world, fb, grid);
+  wg_menu_render(&menu, &params, fb);
+  wg_platform_present(p, fb);
+}
+
 int main(int argc, char **argv) {
+  setvbuf(stdout, NULL, _IOLBF, 0);
+
   uint32_t seed = initial_seed(argc, argv);
   params = wg_params_default();
 
@@ -48,9 +57,7 @@ int main(int argc, char **argv) {
   }
 
   regenerate(p, seed);
-  wg_render_world(&world, &fb);
-  wg_menu_render(&menu, &params, &fb);
-  wg_platform_present(p, &fb);
+  redraw(p, &fb);
 
   bool running = true;
   bool dirty = false;
@@ -63,11 +70,14 @@ int main(int argc, char **argv) {
       break;
 
     case WG_EVENT_KEY_DOWN:
-      if (menu.open && ev.key != 'm' && ev.key != WG_KEY_ESCAPE) {
-        if (wg_menu_key(&menu, &params, ev.key))
+      if (menu.open) {
+        wg_menu_result r = wg_menu_key(&menu, &params, ev.key);
+        if (r == WG_MENU_CHANGED)
           regenerate(p, seed);
-        dirty = true;
-        break;
+        if (r != WG_MENU_IGNORED) {
+          dirty = true;
+          break;
+        }
       }
       if (ev.repeat)
         break;
@@ -82,6 +92,10 @@ int main(int argc, char **argv) {
         break;
       case 'm':
         menu.open = !menu.open;
+        dirty = true;
+        break;
+      case 'b':
+        grid = !grid;
         dirty = true;
         break;
       case WG_KEY_F11:
@@ -107,9 +121,7 @@ int main(int argc, char **argv) {
     }
 
     if (dirty && running) {
-      wg_render_world(&world, &fb);
-      wg_menu_render(&menu, &params, &fb);
-      wg_platform_present(p, &fb);
+      redraw(p, &fb);
       dirty = false;
     }
   }

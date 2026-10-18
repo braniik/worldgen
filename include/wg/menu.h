@@ -15,7 +15,13 @@ typedef struct {
   int cursor;
 } wg_menu;
 
-bool wg_menu_key(wg_menu *m, wg_params *p, int key);
+typedef enum {
+  WG_MENU_IGNORED = 0,
+  WG_MENU_MOVED,
+  WG_MENU_CHANGED
+} wg_menu_result;
+
+wg_menu_result wg_menu_key(wg_menu *m, wg_params *p, int key);
 
 void wg_menu_render(const wg_menu *m, const wg_params *p, wg_framebuffer *fb);
 

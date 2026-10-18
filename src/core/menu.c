@@ -1,14 +1,17 @@
 #include "wg/menu.h"
 
+#include <math.h>
 #include <stdio.h>
 
 typedef struct {
   const char *label;
   float min, max, step;
+  int ordered;
 } param_desc;
 
 static const param_desc descs[] = {
-#define X(field, label, def, min, max, step) {label, min, max, step},
+#define X(field, label, def, min, max, step, ordered)                          \
+  {label, min, max, step, ordered},
     WG_PARAM_LIST
 #undef X
 };
@@ -16,7 +19,16 @@ enum { N_PARAMS = sizeof descs / sizeof descs[0] };
 
 static float *field_ptr(wg_params *p, int i) {
   float *fields[] = {
-#define X(field, label, def, min, max, step) &p->field,
+#define X(field, label, def, min, max, step, ordered) &p->field,
+      WG_PARAM_LIST
+#undef X
+  };
+  return fields[i];
+}
+
+static float field_get(const wg_params *p, int i) {
+  const float fields[] = {
+#define X(field, label, def, min, max, step, ordered) p->field,
       WG_PARAM_LIST
 #undef X
   };
@@ -27,15 +39,15 @@ static float clampf(float v, float lo, float hi) {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-bool wg_menu_key(wg_menu *m, wg_params *p, int key) {
+wg_menu_result wg_menu_key(wg_menu *m, wg_params *p, int key) {
   int dir = 0;
   switch (key) {
   case 'j':
     m->cursor = (m->cursor + 1) % N_PARAMS;
-    return false;
+    return WG_MENU_MOVED;
   case 'k':
     m->cursor = (m->cursor + N_PARAMS - 1) % N_PARAMS;
-    return false;
+    return WG_MENU_MOVED;
   case 'h':
     dir = -1;
     break;
@@ -49,15 +61,22 @@ bool wg_menu_key(wg_menu *m, wg_params *p, int key) {
     dir = 10;
     break;
   default:
-    return false;
+    return WG_MENU_IGNORED;
   }
-  const param_desc *d = &descs[m->cursor];
-  float *v = field_ptr(p, m->cursor);
-  float nv = clampf(*v + dir * d->step, d->min, d->max);
+  int i = m->cursor;
+  const param_desc *d = &descs[i];
+  float lo = d->min, hi = d->max;
+  if (d->ordered && i > 0 && descs[i - 1].ordered)
+    lo = fmaxf(lo, field_get(p, i - 1) + d->step);
+  if (d->ordered && i + 1 < N_PARAMS && descs[i + 1].ordered)
+    hi = fminf(hi, field_get(p, i + 1) - d->step);
+
+  float *v = field_ptr(p, i);
+  float nv = clampf(*v + (float)dir * d->step, lo, hi);
   if (nv == *v)
-    return false;
+    return WG_MENU_MOVED; // at a limit, still a menu key
   *v = nv;
-  return true;
+  return WG_MENU_CHANGED;
 }
 
 void wg_menu_render(const wg_menu *m, const wg_params *p, wg_framebuffer *fb) {
@@ -77,7 +96,7 @@ void wg_menu_render(const wg_menu *m, const wg_params *p, wg_framebuffer *fb) {
   y += line;
 
   for (int i = 0; i < N_PARAMS; i++, y += line) {
-    float v = *field_ptr((wg_params *)p, i);
+    float v = field_get(p, i);
     if (descs[i].step >= 1.0f)
       snprintf(buf, sizeof buf, "%c %-13s %6d", i == m->cursor ? '>' : ' ',
                descs[i].label, (int)v);
