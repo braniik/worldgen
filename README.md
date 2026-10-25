@@ -24,6 +24,7 @@ Every world grows from a single 32-bit seed. The same seed gives the same world.
 - **Mode filter:** Smoothing passes that absorb stray single tiles.
 - **Tile borders:** Toggle the grid. It switches off on its own when tiles get too small to afford it.
 - **Headless checks:** `make check` tests determinism, coverage and coastlines across hundreds of seeds.
+- **Nix flake:** `nix run github:braniik/worldgen` runs it with nothing else installed, and `nix flake check` runs the checks under gcc, clang and ASan/UBSan.
 - **Keyboard only.** Nothing needs a mouse.
 
 ## Keys
@@ -83,9 +84,38 @@ make MODE=debug check # the same checks under ASan/UBSan
 
 The seed is printed to stdout and shown in the window title.
 
+### Nix
+
+The repo is a flake. With [Nix](https://nixos.org) and flakes enabled, you don't need to install anything else.
+
+Run it without cloning:
+```bash
+nix run github:braniik/worldgen # random seed
+nix run github:braniik/worldgen -- 0xDEADBEEF # a specific seed
+```
+
+From a clone:
+```bash
+nix build # build and run make check, binary in ./result/bin/worldgen
+nix build .#debug # the ASan/UBSan build
+nix run . -- 0xDEADBEEF # build and run
+nix flake check # make check under gcc, clang and ASan/UBSan
+nix develop # shell with the compiler, SDL3, gdb, clangd and bear
+```
+
+With [direnv](https://direnv.net), run `direnv allow` once and the dev shell loads whenever you `cd` in.
+
+On distros other than NixOS, programs built by Nix can't find the system's graphics drivers, and worldgen exits with `SDL_CreateRenderer: Couldn't find matching render driver`. [nixGL](https://github.com/nix-community/nixGL) fixes it:
+```bash
+nix profile add --impure github:nix-community/nixGL
+nixGL nix run github:braniik/worldgen
+nixGL make run # inside nix develop
+```
+
 ## Stack
 
 - C11, plain GNU Make, gcc or clang
+- Optional Nix flake for builds, checks and a dev shell
 - SDL3 for the window, input and presenting frames, and nothing else
 - Software rendering into a `uint32_t` framebuffer
 - `lowbias32` hash from Chris Wellons' [hash prospector](https://github.com/skeeto/hash-prospector) (public domain)
@@ -95,6 +125,9 @@ The seed is printed to stdout and shown in the window title.
 ## Project structure
 
 ```
+├── .envrc                    — `use flake`, loads the dev shell with direnv
+├── flake.nix                 — Nix package, checks under gcc, clang and ASan/UBSan, dev shell
+├── flake.lock                — the pinned nixpkgs version
 ├── Makefile                  — release/debug builds in separate dirs, `make check`, -ffp-contract=off
 ├── include/wg/
 │   ├── framebuffer.h         — plain pixel buffer, filled rects, 8x8 text
